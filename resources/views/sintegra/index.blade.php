@@ -28,17 +28,5 @@
             </div>
         </div>
     </div>
-
-    <div class="row">        
-        <table class="table table-bordered" id="tabela" style="display: none;">
-            <thead>
-                <tr>
-                    <th>CNPJ</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
 </div>
 @endsection

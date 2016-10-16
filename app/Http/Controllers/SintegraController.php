@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use App\Models\Sintegra;
+use App\Source\Alerta\Alerta;
 
 class SintegraController extends Controller
 {
@@ -19,6 +20,37 @@ class SintegraController extends Controller
         return view('sintegra.index');
     }
 
+    /**
+     * Tela de listagem das consultas salvas
+     */
+    public function consultas() {
+        return view('sintegra.consultas')
+            ->with('consultas', Sintegra::where('user_id', \Auth::user()->id)->get());
+    }
+
+    /**
+     * Método chamado atraves do app web para deletar uma consulta
+     * @param $id da consulta
+     */
+    public function deletarConsulta($id) {
+        try {
+            Sintegra::firstOrFail($id)->delete();
+            Alerta::exibir('Consulta excluida com sucesso!', 'success');
+        } catch (\Exception $e) {
+            Alerta::exibir('Erro ao excluir consulta!', 'danger');
+        }
+
+        return redirect('consultas');
+    }
+
+    /**
+     * Tela para visualizar consulta
+     * @param $id da consulta
+     */
+    public function visualizarConsulta($id) {
+
+    }
+
     public function consultar(Request $request) {
         $validacao = $this->validarCnpj($request->input('cnpj'));
         if (!$validacao['status']) {
@@ -26,7 +58,7 @@ class SintegraController extends Controller
         }
 
         $retornoConsulta = $this->consultarCnpj($request->input('cnpj'));
-dd($retornoConsulta);
+        dd($retornoConsulta);
         dd($this->formatarRetornoConsulta($retornoConsulta));
     }
 

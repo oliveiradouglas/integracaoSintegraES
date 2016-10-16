@@ -11,6 +11,8 @@
 
         <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
         <link href="{{ asset('css/sweetalert.css') }}" rel="stylesheet">
+
+        <script src="{{ asset('js/jquery.min.js') }}"></script>
     </head>
     <body>
         <div id="app">
@@ -39,6 +41,13 @@
                                 <li><a href="{{ url('/auth/login') }}">Login</a></li>
                                 <li><a href="{{ url('/auth/register') }}">Cadastro</a></li>
                             @else
+                                <li>
+                                    <a href="{{ url('/') }}">Consultar CNPJ</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url('/consultas') }}">Listar consultas</a>
+                                </li>
+
                                 <li class="dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                                         {{ Auth::user()->name }} <span class="caret"></span>
@@ -67,7 +76,6 @@
             @yield('content')
         </div>
 
-        <script src="{{ asset('js/jquery.min.js') }}"></script>
         <script src="{{ asset('js/bootstrap.min.js') }}"></script>
         <script src="{{ asset('js/sweetalert.min.js') }}"></script>
         <script src="{{ asset('js/Alerta.js') }}"></script>

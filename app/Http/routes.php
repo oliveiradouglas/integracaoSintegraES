@@ -22,7 +22,13 @@ Route::get('auth/register', 'Auth\AuthController@getRegister');
 Route::post('auth/register', 'Auth\AuthController@postRegister');
 
 Route::group(['middleware' => ['auth', 'auth.basic']], function (){
+	// Chamadas web
     Route::get('/', 'SintegraController@index');
+    Route::get('/consultas', 'SintegraController@consultas');
+    Route::get('/deletar-consulta/{id}', 'SintegraController@deletarConsulta');
+    Route::get('/visualizar-consulta/{id}', 'SintegraController@visualizarConsulta');
+
+    // Chamadas api
 	Route::post('/consultar', 'SintegraController@consultar');
 });
 
