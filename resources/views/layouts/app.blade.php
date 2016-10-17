@@ -73,6 +73,21 @@
                 </div>
             </nav>
 
+            @if (Session::has('alertas'))
+                @foreach (Session::get('alertas') as $alerta)
+                    <div class="row">
+                        <div class="col-sm-8 col-sm-offset-2">
+                            <div class="alert alert-{{ $alerta->getTipo() }}">
+                                <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+                                {{ $alerta->getMensagem() }}
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
+                {{ Session::forget('alertas') }}
+            @endif
+
             @yield('content')
         </div>
 

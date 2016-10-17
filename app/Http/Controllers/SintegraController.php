@@ -34,7 +34,7 @@ class SintegraController extends Controller
      */
     public function deletarConsulta($id) {
         try {
-            Sintegra::firstOrFail($id)->delete();
+            Sintegra::where('id', $id)->firstOrFail()->delete();
             Alerta::exibir('Consulta excluida com sucesso!', 'success');
         } catch (\Exception $e) {
             Alerta::exibir('Erro ao excluir consulta!', 'danger');
@@ -58,7 +58,49 @@ class SintegraController extends Controller
         }
 
         $retornoConsulta = $this->consultarCnpj($request->input('cnpj'));
-        dd($retornoConsulta);
+        // dd($retornoConsulta);
+
+        // relação de indice do titulo com o indice do valor que é para desconsiderar
+        $desconsiderarIndices = [
+            16 => 16,
+            17 => 17,
+            18 => 20
+        ];
+
+        preg_match_all('/class="titulo"(.*?)>(.*\w.*)<\/td>/', $retornoConsulta, $titulos);
+        // dd($titulos);
+        $titulos = $titulos[2];
+        preg_match_all('/class="valor"(.*?)>(.*\w?.*)<\/td>/', $retornoConsulta, $valores);
+        // dd($valores);
+        $valores = $valores[2];
+
+        foreach ($desconsiderarIndices as $indiceTitulo => $indiceValor) {
+            unset($titulos[$indiceTitulo]);
+            unset($valores[$indiceValor]);
+        }
+ 
+        $from = ['ç', 'ã', 'ú'];
+        $to = ['c', 'a', 'u'];
+
+        reset($valores);
+        $retorno = [];
+        foreach ($titulos as $key => $titulo) {
+            $titulo = str_replace([':', '&nbsp;'], ['', ''], $titulo);
+            $titulo = strtolower(str_replace(' ', '_', trim($titulo)));
+            $titulo = str_replace($from, $to, $titulo);
+            if ($key == 2) {
+                dd($titulo);
+            }
+            // $titulo = strtolower(str_replace([' ', '&nbsp;', ':'], ['_', '', ''], trim($titulo)));
+            // $tituloSemAcento = preg_replace(array_keys($utf8), array_values($utf8), $titulo);
+            
+            // dd($titulo);
+            // $tituloSemCaracteresEspeciais = preg_replace('/[^A-Za-z0-9\_]/', '', $titulo);
+            // dd($tituloSemCaracteresEspeciais);
+            $retorno[$titulo] = trim(current($valores));
+            next($valores);
+        }
+dd($retorno);
         dd($this->formatarRetornoConsulta($retornoConsulta));
     }
 
