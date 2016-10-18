@@ -38,8 +38,8 @@
 
                         <ul class="nav navbar-nav navbar-right">
                             @if (Auth::guest())
-                                <li><a href="{{ url('/auth/login') }}">Login</a></li>
-                                <li><a href="{{ url('/auth/register') }}">Cadastro</a></li>
+                                <li><a href="{{ url('/login') }}">Login</a></li>
+                                <li><a href="{{ url('/register') }}">Cadastro</a></li>
                             @else
                                 <li>
                                     <a href="{{ url('/') }}">Consultar CNPJ</a>
@@ -61,7 +61,7 @@
                                                 Logout
                                             </a>
 
-                                            <form id="logout-form" action="{{ url('/auth/logout') }}" method="POST" style="display: none;">
+                                            <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display: none;">
                                                 {{ csrf_field() }}
                                             </form>
                                         </li>

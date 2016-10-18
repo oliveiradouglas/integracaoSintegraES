@@ -7,7 +7,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">Consultar CNPJ</div>
                 <div class="panel-body">
-                    <form method="post" action="{{ action('SintegraController@consultar') }}">
+                    <form method="post" action="{{ action('SintegraController@consultarCnpjWeb') }}">
                         {{ csrf_field() }}
                         
                         <div class="form-group col-md-12">

@@ -12,23 +12,25 @@
 */
 
 Route::get('/', function(){
-	return redirect('auth/login');
+	return redirect('login');
 });
 
-Route::get('auth/login', 'Auth\AuthController@getLogin');
-Route::post('auth/login', 'Auth\AuthController@postLogin');
-Route::post('auth/logout', 'Auth\AuthController@getLogout');
-Route::get('auth/register', 'Auth\AuthController@getRegister');
-Route::post('auth/register', 'Auth\AuthController@postRegister');
+// login
+Route::get('login', 'Auth\AuthController@getLogin');
+Route::post('login', 'Auth\AuthController@postLogin');
+Route::post('logout', 'Auth\AuthController@getLogout');
+Route::get('register', 'Auth\AuthController@getRegister');
+Route::post('register', 'Auth\AuthController@postRegister');
 
-Route::group(['middleware' => ['auth', 'auth.basic']], function (){
-	// Chamadas web
+// web
+Route::group(['middleware' => ['auth']], function (){
     Route::get('/', 'SintegraController@index');
+    Route::post('/consultar', 'SintegraController@consultarCnpjWeb');
     Route::get('/consultas', 'SintegraController@consultas');
     Route::get('/deletar-consulta/{id}', 'SintegraController@deletarConsulta');
     Route::get('/visualizar-consulta/{id}', 'SintegraController@visualizarConsulta');
 
-    // Chamadas api
-	Route::post('/consultar', 'SintegraController@consultar');
 });
 
+//api
+Route::get('/api/v1/cnpj/{cnpj}', ['middleware' => 'auth.basic', 'uses' => 'SintegraController@apiConsultar']);

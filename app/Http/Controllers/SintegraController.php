@@ -48,81 +48,61 @@ class SintegraController extends Controller
      * @param $id da consulta
      */
     public function visualizarConsulta($id) {
-
-    }
-
-    public function consultar(Request $request) {
-        $validacao = $this->validarCnpj($request->input('cnpj'));
-        if (!$validacao['status']) {
-            return response()->json($validacao, 400);
+        try {
+            $consultaSintegra = Sintegra::where('id', $id)->firstOrFail();
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Alerta::exibir('Consulta não encontrada!', 'danger');
+            return redirect('/');
         }
 
-        $retornoConsulta = $this->consultarCnpj($request->input('cnpj'));
-        // dd($retornoConsulta);
-
-        // relação de indice do titulo com o indice do valor que é para desconsiderar
-        $desconsiderarIndices = [
-            16 => 16,
-            17 => 17,
-            18 => 20
-        ];
-
-        preg_match_all('/class="titulo"(.*?)>(.*\w.*)<\/td>/', $retornoConsulta, $titulos);
-        // dd($titulos);
-        $titulos = $titulos[2];
-        preg_match_all('/class="valor"(.*?)>(.*\w?.*)<\/td>/', $retornoConsulta, $valores);
-        // dd($valores);
-        $valores = $valores[2];
-
-        foreach ($desconsiderarIndices as $indiceTitulo => $indiceValor) {
-            unset($titulos[$indiceTitulo]);
-            unset($valores[$indiceValor]);
-        }
- 
-        $from = ['ç', 'ã', 'ú'];
-        $to = ['c', 'a', 'u'];
-
-        reset($valores);
-        $retorno = [];
-        foreach ($titulos as $key => $titulo) {
-            $titulo = str_replace([':', '&nbsp;'], ['', ''], $titulo);
-            $titulo = strtolower(str_replace(' ', '_', trim($titulo)));
-            $titulo = str_replace($from, $to, $titulo);
-            if ($key == 2) {
-                dd($titulo);
-            }
-            // $titulo = strtolower(str_replace([' ', '&nbsp;', ':'], ['_', '', ''], trim($titulo)));
-            // $tituloSemAcento = preg_replace(array_keys($utf8), array_values($utf8), $titulo);
-            
-            // dd($titulo);
-            // $tituloSemCaracteresEspeciais = preg_replace('/[^A-Za-z0-9\_]/', '', $titulo);
-            // dd($tituloSemCaracteresEspeciais);
-            $retorno[$titulo] = trim(current($valores));
-            next($valores);
-        }
-dd($retorno);
-        dd($this->formatarRetornoConsulta($retornoConsulta));
+        return view('sintegra.visualizar')
+            ->with('consultaSintegra', $consultaSintegra);
     }
 
     /**
-    * Faz a validação do cnpj enviado na requisição
-    * @param $cnpj
-    * @return array
-    */
-    private function validarCnpj($cnpj) {
-        $validacao = Validator::make(
-            ['num_cnpj' => $cnpj],
-            ['num_cnpj' => 'required|min:18']
-        );
+     * Método chamado através do cliente web
+     * faz uma chamada interna no metodo da API e redireciona para visualizarConsulta
+     * @param Request $request
+     */
+    public function consultarCnpjWeb(Request $request) {
+        $retornoApi = $this->apiConsultar($request->input('cnpj'));
 
-        if ($validacao->fails()) {
-            return [
-                'status' => false,
-                'error'  => implode(', ', $validacao->getMessageBag()->getMessages()['num_cnpj'])
-            ];
+        if (!$retornoApi->getData()->status) {
+            Alerta::exibir($retornoApi->getData()->erro, 'danger');
+            return redirect('/');
         }
 
-        return ['status' => true];
+        return redirect('visualizar-consulta/' . $retornoApi->getData()->consulta->id);
+    }
+
+    /**
+     * Faz o tratamento da chamada de consulta da api
+     * @return json
+     */
+    public function apiConsultar($cnpj) {
+        $cnpj         = str_replace(['.', '-', '/'], ['', '', ''], $cnpj);
+        $bodyConsulta = $this->consultarCnpj($cnpj);
+
+        $retornoFormatado = $this->formatarRetornoConsulta($bodyConsulta);
+        if (!$retornoFormatado) {
+            return response()->json([
+                'status' => false,
+                'erro'   => 'CNPJ não encontrado!'
+            ], 404);
+        }
+
+        $consultaSintegra = Sintegra::create([
+            'user_id' => \Auth::user()->id,
+            'cnpj'    => $cnpj,
+            'resultado_json' => json_encode($retornoFormatado)
+        ]);
+
+        $retornoFormatado['id'] = $consultaSintegra->id;
+
+        return response()->json([
+            'status'   => true,
+            'consulta' => $retornoFormatado
+        ]);
     }
 
     /**
@@ -139,18 +119,23 @@ dd($retorno);
             ]
         ]);
 
-        return $resposta->getBody()->getContents();
+        return html_entity_decode(
+            utf8_encode(
+                $resposta->getBody()->getContents()
+            )
+        );
     }
 
     /**
      * Recebe o retorno da consulta e formata para retornar ao cliente
-     * @return 
+     * @return array | false
      */
-    public function formatarRetornoConsulta($retornoConsulta) {
-        if (stripos($body, 'class="resultado"') === false) {
+    public function formatarRetornoConsulta($bodyConsulta) {
+        if (stripos($bodyConsulta, 'class="resultado"') === false) {
             return false;
         }
         
-        return $body;
+        $parseConsulta = new \App\Source\Parse\ConsultaSintegra($bodyConsulta);
+        return $parseConsulta->parsearParaArray();
     }
 }

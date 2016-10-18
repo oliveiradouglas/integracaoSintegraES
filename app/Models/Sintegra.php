@@ -10,5 +10,14 @@ class Sintegra extends Model {
 
     const ENDPOINT = 'http://www.sintegra.es.gov.br/';
 
-    protected $table = 'sintegra';
+    protected $table    = 'sintegra';
+    protected $fillable = ['cnpj', 'user_id', 'resultado_json'];
+
+    public function getResultadoJsonAttribute($resultado) {
+    	return json_decode($resultado);
+    }
+
+    public function getCreatedAtAttribute($created) {
+    	return (new \DateTime($created))->format('d/m/Y');
+    }
 }
